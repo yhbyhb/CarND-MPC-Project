@@ -129,8 +129,8 @@ int main() {
           auto vars = mpc.Solve(state, coeffs);
 
           int var_idx = 0;
-          double steer_value = vars[var_idx++];
-          double throttle_value = vars[var_idx++];
+          double steer_value = vars[0];
+          double throttle_value = vars[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -147,13 +147,13 @@ int main() {
           int n = (vars.size() - 2) / 2;
           for (int i = 0; i < n; ++i)
           {
-            mpc_x_vals.push_back(vars[var_idx++]);
+            mpc_x_vals.push_back(vars[2 + i]);
             std::cout << "mpc_x[" << i << "] " << mpc_x_vals[i] << " ";
           }
           std::cout << std::endl;
           for (int i = 0; i < n; ++i)
           {
-            mpc_y_vals.push_back(vars[var_idx++]);
+            mpc_y_vals.push_back(vars[2 + n + i]);
             std::cout << "mpc_y[" << i << "] " << mpc_y_vals[i] << " ";
           }
           std::cout << std::endl;

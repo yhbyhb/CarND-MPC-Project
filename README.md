@@ -1,3 +1,42 @@
+# **Project: Model Predictive Control **
+[![Udacity - Self-Driving Car Engineer NanoDegree Program](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+
+
+## Overview
+This repository contains all the codes and reflection that required for completing project. The goal of this project is to implement model predictive control to drive the car around the track.
+
+Build instruction and dependency of this project is identical to [upstream repository](https://github.com/udacity/CarND-MPC-Project) which is the starter code repository of udacity.
+
+## Reflection
+
+Followings are criteria of rubrics. 
+
+### The model
+In this project, I used global kinematic model which is mentioned in the lecture. The model is relatively simple compared to dynamic model which includes slip model and tire model.
+
+The state has vehicle's position on the map (x, y), orientation (psi), velocity (psi), cte (cross track error) and psi error (epsi). Actuators are steering angle (delta) and acceleration (a). 
+
+With following update equations, we can predict future state of vehicle.
+```
+x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+v_[t+1] = v[t] + a[t] * dt
+cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+```
+where `dt` is time difference between future and current state of vehicle and `Lf` is the distance between the front of the vehicle and its center of gravity.
+
+### Time-step length and elapsed duration (N & dt)
+
+10, 0.1
+
+### Polynomial fitting and MPC preprocessing
+
+### Model predictive control with latency
+
+
+
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
 
