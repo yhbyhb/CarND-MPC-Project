@@ -128,7 +128,6 @@ int main() {
 
           auto vars = mpc.Solve(state, coeffs);
 
-          int var_idx = 0;
           double steer_value = vars[0];
           double throttle_value = vars[1];
 
@@ -148,13 +147,11 @@ int main() {
           for (int i = 0; i < n; ++i)
           {
             mpc_x_vals.push_back(vars[2 + i]);
-            std::cout << "mpc_x[" << i << "] " << mpc_x_vals[i] << " ";
           }
           std::cout << std::endl;
           for (int i = 0; i < n; ++i)
           {
             mpc_y_vals.push_back(vars[2 + n + i]);
-            std::cout << "mpc_y[" << i << "] " << mpc_y_vals[i] << " ";
           }
           std::cout << std::endl;
           msgJson["mpc_x"] = mpc_x_vals;

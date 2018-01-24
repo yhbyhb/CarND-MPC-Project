@@ -6,9 +6,9 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-// I set the number of timesteps to 25
+// I set the number of timesteps to 10
 // and the timestep evaluation frequency or evaluation
-// period to 0.05.
+// period to 0.1.
 size_t N = 10;
 double dt = 0.1;
 
@@ -271,11 +271,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   for (i = 1; i < N; ++i)
   {
-    result.push_back(solution.x[x_start]);
+    result.push_back(solution.x[x_start + i]);
   }
   for (i = 1; i < N; ++i)
   {
-    result.push_back(solution.x[y_start]);
+    result.push_back(solution.x[y_start + i]);
   }
 
   return result;
