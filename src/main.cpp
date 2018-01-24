@@ -101,17 +101,16 @@ int main() {
 
           // Transform coordination from global to view of car.
           // So, first point is (0, 0) with angle 0
-          Eigen::VectorXd car_ptsx;
-          Eigen::VectorXd car_ptsy;
+          auto numPoints = ptsx.size();
+          Eigen::VectorXd car_ptsx(numPoints);
+          Eigen::VectorXd car_ptsy(numPoints);
 
-          car_ptsx << 0;
-          car_ptsy << 0;
-          for (int i = 1; i < ptsx.size(); ++i)
+          for (size_t i = 0; i < numPoints; ++i)
           {
             const double diff_x = ptsx[i] - px;
             const double diff_y = ptsy[i] - py;
-            car_ptsx << cos(-psi) * diff_x - sin(-psi) * diff_y;
-            car_ptsy << sin(-psi) * diff_y + cos(-psi) * diff_x;
+            car_ptsx[i] = cos(-psi) * diff_x - sin(-psi) * diff_y;
+            car_ptsy[i] = sin(-psi) * diff_x + cos(-psi) * diff_y;
           }
 
           // third order polynomial
@@ -136,7 +135,7 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
+          msgJson["steering_angle"] = steer_value / 0.436332;
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
@@ -149,12 +148,15 @@ int main() {
           for (int i = 0; i < n; ++i)
           {
             mpc_x_vals.push_back(vars[var_idx++]);
+            std::cout << "mpc_x[" << i << "] " << mpc_x_vals[i] << " ";
           }
+          std::cout << std::endl;
           for (int i = 0; i < n; ++i)
           {
             mpc_y_vals.push_back(vars[var_idx++]);
+            std::cout << "mpc_y[" << i << "] " << mpc_y_vals[i] << " ";
           }
-
+          std::cout << std::endl;
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
@@ -162,7 +164,7 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          for (int i = 0; i <= car_ptsx.back(); ++i)
+          for (int i = 0; i <= car_ptsx[numPoints -1]; ++i)
           {
             next_x_vals.push_back(i);
             next_y_vals.push_back(polyeval(coeffs, i));
