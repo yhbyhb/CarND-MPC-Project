@@ -98,8 +98,40 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+
+          // Transform coordination from global to view of car.
+          // So, first point is (0, 0) with angle 0
+          Eigen::VectorXd car_ptsx;
+          Eigen::VectorXd car_ptsy;
+
+          car_ptsx << 0;
+          car_ptsy << 0;
+          for (int i = 1; i < ptsx.size(); ++i)
+          {
+            const double diff_x = ptsx[i] - px;
+            const double diff_y = ptsy[i] - py;
+            car_ptsx << cos(-psi) * diff_x - sin(-psi) * diff_y;
+            car_ptsy << sin(-psi) * diff_y + cos(-psi) * diff_x;
+          }
+
+          // third order polynomial
+          auto coeffs = polyfit(car_ptsx, car_ptsy, 3);
+
+          // position vehicle is the origin of coordination.
+          px = 0;
+          py = 0;
+          psi = 0;
+          double cte = polyeval(coeffs, px) - py;
+          double epsi = psi - atan(coeffs[1]);
+          
+          Eigen::VectorXd state(6);
+          state << px, py, psi, v, cte, epsi;
+
+          auto vars = mpc.Solve(state, coeffs);
+
+          int var_idx = 0;
+          double steer_value = vars[var_idx++];
+          double throttle_value = vars[var_idx++];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -113,6 +145,15 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
+          int n = (vars.size() - 2) / 2;
+          for (int i = 0; i < n; ++i)
+          {
+            mpc_x_vals.push_back(vars[var_idx++]);
+          }
+          for (int i = 0; i < n; ++i)
+          {
+            mpc_y_vals.push_back(vars[var_idx++]);
+          }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -120,6 +161,12 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+
+          for (int i = 0; i <= car_ptsx.back(); ++i)
+          {
+            next_x_vals.push_back(i);
+            next_y_vals.push_back(polyeval(coeffs, i));
+          }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
