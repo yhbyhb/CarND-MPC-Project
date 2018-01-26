@@ -51,6 +51,7 @@ double epsi = psi - atan(coeffs[1] + 2 * coeffs[2] * px);
 Eigen::VectorXd state(6);
 state << px, py, psi, v, cte, epsi;
 ```
+After updating initial state of vehicle state with above codes, the MPC procedure is applied.
 
 ### Cost Function parameters
 For smooth steering, I tuned the cost function that affects steering. In line 74 of `MPC.cpp`, Multiplying that part by 1500 influenced the solver into keeping sequential steering values closer together.
