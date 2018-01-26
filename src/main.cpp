@@ -94,6 +94,8 @@ int main() {
           double delta = j[1]["steering_angle"];
           double a = j[1]["throttle"];
 
+          delta = delta * -1;
+
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -127,11 +129,11 @@ int main() {
           psi = 0;
 
           // latency
-          double latency = 0;
-          px += v * cos(psi) * latency;
-          py += v * sin(psi) * latency;
-          psi += v * delta / 2.67 * latency; // Lf = 2.67
-          v += a * latency;
+          double latency = 0.1;
+          px = px + v * cos(psi) * latency;
+          py = py + v * sin(psi) * latency;
+          psi = psi + v * delta / 2.67 * latency; // Lf = 2.67
+          v = v + a * latency;
           
           double cte = polyeval(coeffs, px) - py;
           double epsi = psi - atan(coeffs[1] + 2 * coeffs[2] * px);
@@ -188,7 +190,7 @@ int main() {
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
