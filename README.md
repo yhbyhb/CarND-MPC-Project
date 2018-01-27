@@ -58,7 +58,7 @@ Also, increasing weight for the orientation error as line 62 of `MPC.cpp` helped
 I could get more stable trajectories.
 
 ## Result
-I achieved about 68 MPH which is much higher than what I achieved with PID controller. Here is [youtube link](https://youtu.be/GGtviEpnJlM) of recording two rounds of given track.
+I achieved about 68 MPH which is much higher than what I achieved with PID controller. Here is [youtube link](https://youtu.be/iVNTpn6agaM) of recording two rounds of given track.
 
 ## References
  - Udacity discussion forum - [How to incorporate latency into the model](https://discussions.udacity.com/t/how-to-incorporate-latency-into-the-model/257391)
