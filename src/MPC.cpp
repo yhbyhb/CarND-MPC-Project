@@ -164,19 +164,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars[i] = 0;
   }
 
-  double x = state[0];
-  double y = state[1];
-  double psi = state[2];
-  double v = state[3];
-  double cte = state[4];
-  double epsi = state[5];
-  // Set the initial variable values
-  vars[x_start] = x;
-  vars[y_start] = y;
-  vars[psi_start] = psi;
-  vars[v_start] = v;
-  vars[cte_start] = cte;
-  vars[epsi_start] = epsi;
+  const double x = state[0];
+  const double y = state[1];
+  const double psi = state[2];
+  const double v = state[3];
+  const double cte = state[4];
+  const double epsi = state[5];
 
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);

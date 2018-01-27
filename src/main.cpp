@@ -65,6 +65,22 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
+Eigen::MatrixXd transformCoordiate(double x, double y, double psi,
+  const vector<double>& ptsx, const vector<double>& ptsy) {
+  const int numPoints = ptsx.size();
+
+  Eigen::MatrixXd targetPoints = Eigen::MatrixXd(2, numPoints);
+  for (int i = 0; i < numPoints; ++i)
+  {
+      const double diff_x = ptsx[i] - x;
+      const double diff_y = ptsy[i] - y;
+      targetPoints(0, i) = cos(psi) * diff_x - sin(psi) * diff_y;
+      targetPoints(1, i) = sin(psi) * diff_x + cos(psi) * diff_y;
+  }
+
+  return targetPoints;
+}
+
 int main() {
   uWS::Hub h;
 
@@ -107,17 +123,9 @@ int main() {
 
           // Transform coordination from global to view of car.
           // So, first point is (0, 0) with angle 0
-          auto numPoints = ptsx.size();
-          Eigen::VectorXd car_ptsx(numPoints);
-          Eigen::VectorXd car_ptsy(numPoints);
-
-          for (size_t i = 0; i < numPoints; ++i)
-          {
-            const double diff_x = ptsx[i] - px;
-            const double diff_y = ptsy[i] - py;
-            car_ptsx[i] = cos(psi) * diff_x - sin(psi) * diff_y;
-            car_ptsy[i] = sin(psi) * diff_x + cos(psi) * diff_y;
-          }
+          Eigen::MatrixXd car_pts = transformCoordiate(px, py, psi, ptsx, ptsy);
+          Eigen::VectorXd car_ptsx = car_pts.row(0);
+          Eigen::VectorXd car_ptsy = car_pts.row(1); 
 
           // Get third order polynomial coeffs from way points.
           auto coeffs = polyfit(car_ptsx, car_ptsy, 3);
@@ -139,7 +147,7 @@ int main() {
           v = v + a * latency;
           
           double cte = polyeval(coeffs, px) - py;
-          double epsi = psi - atan(coeffs[1] + 2 * coeffs[2] * px);
+          double epsi = psi - atan(coeffs[1] + 2 * coeffs[2] * px + 3 * coeffs[3] * px * px);
           
           Eigen::VectorXd state(6);
           state << px, py, psi, v, cte, epsi;
@@ -179,7 +187,8 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          for (int i = 0; i <= car_ptsx[numPoints -1]; ++i)
+          const int numPoints = car_ptsx.size();
+          for (int i = 0; i <= car_ptsx[numPoints - 1]; ++i)
           {
             next_x_vals.push_back(i);
             next_y_vals.push_back(polyeval(coeffs, i));
