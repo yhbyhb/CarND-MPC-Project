@@ -31,14 +31,12 @@ where `dt` is time difference between future and current state of vehicle and `L
 I started with (20, 0.05) which is used in quizzes in the lecture without latency. After adding latency, they needed to change since it keeps overshooting. After number of tunning N & dt. I sticked with `N = 10` and `dt = 0.1`. when I decreased `dt` below 0.1, the vehicle oscillated more. If I increase `dt` above 0.1, The green line (prediction line) get completely weired when car meets stiff corners.
 
 ### Polynomial fitting and MPC preprocessing
-I used third-order polynomial for fitting waypoints. Before the fitting polynomials, coordinate transformation is needed since simulator's points are global position. The positions given by simulator are transformed to vehicle coordinate system. Line 114 to 123 of `main.cpp` shows fitting polynomial and transforming coordinate system. 
+I used third-order polynomial for fitting waypoints. Before the fitting polynomials, coordinate transformation is needed since simulator's points are global position. The positions given by simulator are transformed to vehicle coordinate system. I wrote the function `transformCoordiate()` which transforms coordination from global to vehicle's view. It returns 2 by number of points matrix, first row for x positions and second row for y positions of vehicle. Line 131 to 136 of `main.cpp` shows fitting polynomial and transforming coordinate system. 
 
 Since sign of angle of simulator is opposite value of our model, I multiply -1 to `psi` and `delta`. Also, right before sending `steering_angle` back to simulator, I changed the sign of the steer value.
-
 ### Model predictive control with latency
-Actuator latency is used for predicting initial state of the vehicle with update equations. After transforming coordinate system, I updated state of the vehicle with latency. Codes are found in line 134 to 145 of `main.cpp`.
+Actuator latency is used for predicting initial state of the vehicle with update equations. After transforming coordinate system, I updated state of the vehicle with latency. Codes are found in line 154 to 164 of `main.cpp`.
 ```C++
-const double latency = 0.1;
 const double Lf = 2.67;
 px = px + v * cos(psi) * latency;
 py = py + v * sin(psi) * latency;
@@ -46,20 +44,21 @@ psi = psi + v * delta / Lf * latency;
 v = v + a * latency;
 
 double cte = polyeval(coeffs, px) - py;
-double epsi = psi - atan(coeffs[1] + 2 * coeffs[2] * px);
+double epsi = psi - atan(coeffs[1] + 2 * coeffs[2] * px + 3 * coeffs[3] * px * px);
 
 Eigen::VectorXd state(6);
 state << px, py, psi, v, cte, epsi;
 ```
+I measured actual latency which includes computational time for MPC and 100 ms latency of actuator with `std::chrono::steady_clock::now()`. Since MPC processing time varies with system specification, I used measured latency for predicting initial state of the vehicle if previous measured latency larger than 100 ms. 
 After updating initial state of vehicle state with above codes, the MPC procedure is applied.
 
 ### Cost Function parameters
-For smooth steering, I tuned the cost function that affects steering. In line 74 of `MPC.cpp`, Multiplying that part by 1500 influenced the solver into keeping sequential steering values closer together.
-
-During the optimizing cost function, I also found, steering needs to minimize for preventing overshooting. By multiplying 1000 in line 68 of `MPC.cpp`, I could get more stable trajectories.
+For smooth steering, I tuned the cost function that affects steering. In line 74 of `MPC.cpp`, Multiplying that part by 5000 influenced the solver into keeping sequential steering values closer together.
+Also, increasing weight for the orientation error as line 62 of `MPC.cpp` helped to keep the car pointing in the direction of the road.
+I could get more stable trajectories.
 
 ## Result
-I achieved about 73 MPH which is much higher than what I achieved with PID controller. Here is [youtube link](https://youtu.be/GGtviEpnJlM) of recording two rounds of given track.
+I achieved about 68 MPH which is much higher than what I achieved with PID controller. Here is [youtube link](https://youtu.be/GGtviEpnJlM) of recording two rounds of given track.
 
 ## References
  - Udacity discussion forum - [How to incorporate latency into the model](https://discussions.udacity.com/t/how-to-incorporate-latency-into-the-model/257391)
