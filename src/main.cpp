@@ -9,6 +9,7 @@
 #include "MPC.h"
 #include "json.hpp"
 
+using namespace std::chrono;
 // for convenience
 using json = nlohmann::json;
 
@@ -86,8 +87,9 @@ int main() {
 
   // MPC is initialized here!
   MPC mpc;
+  int actual_latency_ms = 0;
 
-  h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&mpc, &actual_latency_ms](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -100,6 +102,9 @@ int main() {
         auto j = json::parse(s);
         string event = j[0].get<string>();
         if (event == "telemetry") {
+          // measure actual latency
+          steady_clock::time_point begin = steady_clock::now();
+
           // j[1] is the data JSON object
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
@@ -139,7 +144,13 @@ int main() {
           psi = 0;
 
           // Latency changes state of car.
-          const double latency = 0.1;
+          double latency = 0.1;
+          if (actual_latency_ms > 100)
+          {
+            latency = (double)actual_latency_ms / 1000;
+            std::cout << "previous latency(ms) : " << latency * 1000 << std::endl; 
+          }
+
           const double Lf = 2.67;
           px = px + v * cos(psi) * latency;
           py = py + v * sin(psi) * latency;
@@ -174,12 +185,10 @@ int main() {
           {
             mpc_x_vals.push_back(vars[2 + i]);
           }
-          std::cout << std::endl;
           for (int i = 0; i < n; ++i)
           {
             mpc_y_vals.push_back(vars[2 + n + i]);
           }
-          std::cout << std::endl;
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
@@ -202,6 +211,7 @@ int main() {
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
+
           // std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
@@ -213,6 +223,9 @@ int main() {
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
           this_thread::sleep_for(chrono::milliseconds(100));
+          steady_clock::time_point end = steady_clock::now();
+          actual_latency_ms = duration_cast<milliseconds>(end - begin).count();
+          std::cout << "actual latency(ms) : " << actual_latency_ms << std::endl << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
