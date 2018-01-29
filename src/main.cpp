@@ -117,7 +117,6 @@ int main() {
 
           // The sign of angle of simulator is opposite to our model (counter clock wise is positive)
           delta = delta * -1;
-          psi = psi * -1;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
